@@ -66,7 +66,6 @@ contract DeliveryCondition is Owned {
     order.customer = msg.sender;
     order.logistic = logistic;
     order.shippingPrice = shippingPrice;
-    order.customer = msg.sender;
     order.stat = status.Active;
   }
 }
