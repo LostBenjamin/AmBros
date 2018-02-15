@@ -4,13 +4,13 @@ class BlockChainData:
         pass
 
 
-    def build_asset():
+    def buildAsset():
         pass
 
 
-    def build_event():
+    def buildEvent():
         pass
 
 
-    def get_events_by_asset_id():
+    def getEventsByAssetId():
         pass

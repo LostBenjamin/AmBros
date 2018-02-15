@@ -14,8 +14,6 @@ contract Owned {
 }
 
 contract DeliveryCondition is Owned {
-  address public oracleAddress;
-
   enum status {Active, Done}
 
   struct Order {
@@ -40,6 +38,7 @@ contract DeliveryCondition is Owned {
     */
 
     address customer;
+    address logistic;
     /*
     address ownerAMB;
     address creatorAMB;
@@ -48,57 +47,26 @@ contract DeliveryCondition is Owned {
   }
 
   Order[] public orders;
-  mapping (uint256 => uint256) queries;
 
-  modifier onlyOracle() {
-    require (msg.sender == oracleAddress);
-    _;
-  }
-
-  function setOracle(address _oracleAddress) public onlyOwner {
-    oracleAddress = _oracleAddress;
-  }
-
-  function __callback(uint256 queryId, uint256 finalPrice) public onlyOracle {
-    uint256 orderId = queries[queryId];
+  function confirm(uint256 orderId, uint256 finalPrice) public {
     Order storage order = orders[orderId];
     require(order.stat == status.Active);
     uint256 returnPrice = order.shippingPrice - finalPrice;
     require(this.balance >= returnPrice);
     order.customer.transfer(returnPrice);
+    order.logistic.transfer(finalPrice);
     order.stat = status.Done;
   }
 
-  function newOrder(uint256 shippingPrice) public payable {
+  function newOrder(address logistic, uint256 shippingPrice) public payable {
     require(msg.value == shippingPrice);
     uint256 orderId = orders.length++;
-    uint256 queryId = DeliveryOracle(oracleAddress).query();
     Order storage order = orders[orderId];
-    order.orderId = queryId;
+    order.orderId = orderId;
+    order.customer = msg.sender;
+    order.logistic = logistic;
     order.shippingPrice = shippingPrice;
     order.customer = msg.sender;
     order.stat = status.Active;
-    queries[queryId] = orderId;
-  }
-}
-
-contract Caller {
-  function __callback(uint256 queryId, uint256 finalPrice) public;
-}
-
-contract DeliveryOracle is Owned {
-  address[] public oracleCaller;
-
-  function query() public returns (uint256 queryId) {
-    queryId = oracleCaller.length++;
-    oracleCaller[queryId] = msg.sender;
-    return queryId;
-  }
-
-  function sendOracleData(uint256 queryId, uint256 finalPrice) public onlyOwner {
-    require(oracleCaller[queryId] != 0x0);
-    address callingContract = oracleCaller[queryId];
-    oracleCaller[queryId] = 0x0;
-    Caller(callingContract).__callback(queryId, finalPrice);
   }
 }
