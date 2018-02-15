@@ -47,7 +47,7 @@ class BlockChainData:
     #    pass
 #
 #
-    def buildEvent(self, AssetId, createTime, TempSensor1, TempSensor2, TempSensor3, Humidity, UnitTemp, UnitHumidity):
+    def buildEvent(self, AssetId, createTime, Location, TempSensor1, TempSensor2, TempSensor3, Humidity, UnitTemp, UnitHumidity):
         data = {
             'content': {
                 'secret': self.secret,
@@ -56,6 +56,7 @@ class BlockChainData:
                     'subject': "0x44EA4BAe7C8176690102cBf83d87FAD2bD6F1F27",
                     'creator': "0x44EA4BAe7C8176690102cBf83d87FAD2bD6F1F27",
                     'created_at': createTime,
+                    'location': Location,
                     'tempSensor1': TempSensor1,
                     'tempSensor2': TempSensor2,
                     'tempSensor3': TempSensor3,
