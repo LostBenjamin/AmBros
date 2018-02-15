@@ -2,14 +2,15 @@ import requests as rq
 import json
 import time
 
-class BlockChainData:
+class BlockChainAsset:
 
     def __init__(self, secret, address):
         self.secret = secret
         self.address = address
+        self.assetId = None
 
 
-    def buildAsset(self, createTime, pickupTime, deliveryTime, price, quantity, maxTemperature, minTemperature, toleranceTime, measureInterval, penaltyMoneyUnit, penaltyTimeUnit, maxPenalty, bcSyncInterval, incoterm):
+    def buildAsset(self, orderNumber, createTime, pickupTime, deliveryTime, shippingPrice, quantity, maxTemperature, minTemperature, toleranceTime, measureInterval, penaltyPerday, maxPenalty, bcSyncInterval, incoterm):
         data = {
             'content': {
                 'secret': self.secret,
@@ -19,16 +20,16 @@ class BlockChainData:
                     'creator': self.address,
                     'created_at': createTime,
                     'custom': {
+                        'order_number': orderNumber,
                         'pickup_time': pickupTime,
                         'delivery_time': deliveryTime,
-                        'price': price,
+                        'shipping_price': shippingPrice,
                         'quantity': quantity,
                         'max_temperature': maxTemperature,
                         'min_temperature': minTemperature,
                         'tolerance_time': toleranceTime,
                         'measure_interval': measureInterval,
-                        'penalty_money_unit': penaltyMoneyUnit,
-                        'penalty_time_unit': penaltyTimeUnit,
+                        'penalty_per_day': penaltyPerday,
                         'max_penalty': maxPenalty,
                         'bcSyncInterval': bcSyncInterval
                     }
@@ -42,41 +43,48 @@ class BlockChainData:
             'Content-Type': 'application/json'
         }
         r = rq.post('https://network.ambrosus.com/assets', json=data, headers=headers)
-        #print(r.text)
-        return r.text
-    #    pass
-#
-#
-    def buildEvent(self, AssetId, createTime, Location, TempSensor1, TempSensor2, TempSensor3, Humidity, UnitTemp, UnitHumidity):
+        j = json.loads(r.text)
+        self.assetId = j['id']
+
+
+    def buildEvent(self, tempSensor1, tempSensor2, tempSensor3, createTime):
         data = {
             'content': {
                 'secret': self.secret,
                 'data': {
                     'type': 'measurement.temperature',
-                    'subject': "0x44EA4BAe7C8176690102cBf83d87FAD2bD6F1F27",
-                    'creator': "0x44EA4BAe7C8176690102cBf83d87FAD2bD6F1F27",
+                    'subject': self.assetId,
+                    'creator': self.address,
                     'created_at': createTime,
-                    'location': Location,
-                    'tempSensor1': TempSensor1,
-                    'tempSensor2': TempSensor2,
-                    'tempSensor3': TempSensor3,
-                    'humidity': Humidity,
-                    'unitTemp': 'Celcius'
-                    'unitHum' : 'Percent'
+                    'custom': {
+                        'tempSensor1': tempSensor1,
+                        'tempSensor2': tempSensor2,
+                        'tempSensor3': tempSensor3,
+                        'unit': 'Celcius'
+                        }
                     }
             }
         }
         headers = {
             'Content-Type': 'application/json'
         }
-        r = rq.post('https://network.ambrosus.com/assets/{}/events'.format(AssetId), json=data, headers=headers)
-        print(r.text)
-    #def getEventsByAssetId():
-    #    pass
+        r = rq.post('https://network.ambrosus.com/assets/{}/events'.format(self.assetId), json=data, headers=headers)
+
+
+    def getEvents(self):
+        headers = {
+            'Content-Type': 'application/json'
+        }
+        r = rq.get('https://network.ambrosus.com/assets/{}/events'.format(self.assetId), headers=headers)
+        #print(json.dumps(json.loads(r.text), indent = 4, sort_keys = True))
+        return json.loads(r.text)
+
 
 if __name__ == '__main__':
     secret = '0x546de93a45c8df31e63b0bea9534a7ca03e9eb0e817f0d436d9b324b43d0a123'
     address = '0xdce2dd4bB3A9E29714dD317d05869fcD72F20Cbe'
-    bcd = BlockChainData(secret, address)
-    asset = bcd.buildAsset(1518685688, 1518685688, 1518688000, 1000, 1, 50, 5, 100, 10, 10, 100, 500, 10, 'hah')
-    bcd.buildEvent(asset['id'], 1518685688, 8, 12, 10, 40, 'Celcius', 'Percent')
+    bca = BlockChainAsset(secret, address)
+    asset = bca.buildAsset(0, 1518685688, 1518685688, 1518688000, 1000, 1, 50, 5, 100, 10, 100, 500, 10, 'hah')
+    bca.buildEvent(8, 12, 10, 1518685688)
+    bca.buildEvent(9, 13, 11, 1518685800)
+    bca.getEvents()
