@@ -42,12 +42,34 @@ class BlockChainData:
             'Content-Type': 'application/json'
         }
         r = rq.post('https://network.ambrosus.com/assets', json=data, headers=headers)
-
-
-    #def buildEvent():
+        #print(r.text)
+        return r.text
     #    pass
 #
 #
+    def buildEvent(self, AssetId, createTime, TempSensor1, TempSensor2, TempSensor3, Humidity, UnitTemp, UnitHumidity):
+        data = {
+            'content': {
+                'secret': self.secret,
+                'data': {
+                    'type': 'measurement.temperature',
+                    'subject': "0x44EA4BAe7C8176690102cBf83d87FAD2bD6F1F27",
+                    'creator': "0x44EA4BAe7C8176690102cBf83d87FAD2bD6F1F27",
+                    'created_at': createTime,
+                    'tempSensor1': TempSensor1,
+                    'tempSensor2': TempSensor2,
+                    'tempSensor3': TempSensor3,
+                    'humidity': Humidity,
+                    'unitTemp': 'Celcius'
+                    'unitHum' : 'Percent'
+                    }
+            }
+        }
+        headers = {
+            'Content-Type': 'application/json'
+        }
+        r = rq.post('https://network.ambrosus.com/assets/{}/events'.format(AssetId), json=data, headers=headers)
+        print(r.text)
     #def getEventsByAssetId():
     #    pass
 
@@ -55,4 +77,5 @@ if __name__ == '__main__':
     secret = '0x546de93a45c8df31e63b0bea9534a7ca03e9eb0e817f0d436d9b324b43d0a123'
     address = '0xdce2dd4bB3A9E29714dD317d05869fcD72F20Cbe'
     bcd = BlockChainData(secret, address)
-    bcd.buildAsset(1518685688, 1518685688, 1518688000, 1000, 1, 50, 5, 100, 10, 10, 100, 500, 10, 'hah')
+    asset = bcd.buildAsset(1518685688, 1518685688, 1518688000, 1000, 1, 50, 5, 100, 10, 10, 100, 500, 10, 'hah')
+    bcd.buildEvent(asset['id'], 1518685688, 8, 12, 10, 40, 'Celcius', 'Percent')
