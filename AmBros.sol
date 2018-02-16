@@ -26,8 +26,8 @@ contract DeliveryCondition is Owned {
 
   mapping (uint256 => Order) public orders;
 
-  function confirm(uint256 orderId, uint256 finalPrice) public {
-    Order storage order = orders[orderId];
+  function confirm(uint256 orderNumber, uint256 finalPrice) public {
+    Order storage order = orders[orderNumber];
     require(order.stat == status.Active);
     uint256 returnPrice = order.shippingPrice - finalPrice;
     require(this.balance >= returnPrice);
